@@ -1,0 +1,74 @@
+﻿@model List<escolakell.Models.Aluno>
+@{
+    ViewData["Title"] = "Diário de Classe";
+
+    var totalAlunos = Model.Count;
+    var totalRecuperacao = Model.Count(d => !d.SituacaoAprovada );
+
+    
+}
+
+
+<div class="container mt-4">
+    <h2>Diário de Classe - 3º Ano B</h2>
+
+    <div class="d-flex gap-2 mb-3 align-items-center">
+        <button onclick="mostrarTodos()" class="btn btn-primary">
+            Ver Todos (@totalAlunos)
+        </button>
+        <button onclick="mostrarRecuperacao()" class="btn btn-warning">
+            Recuperação (@totalRecuperacao)
+        </button>
+        <a asp-action="Salvar" class="btn btn-success ms-auto">
+            <i class="fas fa-plus"></i> Adicionar Aluno
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Matéria</th>
+                <th>Nota 1</th>
+                <th>Nota 2</th>
+                <th>Média</th>
+                <th>Situação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in Model)
+            {
+                var classeLinha = aluno.SituacaoAprovada ? "table-success" : "fw-bold table-warning";
+
+                <tr class="@classeLinha"
+                    data-situacao="@(aluno.SituacaoAprovada ? "aprovado" : "recuperacao")"
+                    data-media="@aluno.Media"
+                    data-aprovado="@aluno.SituacaoAprovada.ToString().ToLower()">
+                    <td>@aluno.Nome</td>
+                    <td>@aluno.Materia</td>
+                    <td>@aluno.Nota1.ToString("N1")</td>
+                    <td>@aluno.Nota2.ToString("N1")</td>
+                    <td>@aluno.Media.ToString("N1")</td>
+                    <td>@aluno.SituacaoTexto</td>
+                    <td>
+                        <!-- Botão Editar agora vai para Salvar com ID -->
+                        <a asp-action="Salvar" asp-route-id="@aluno.Id"
+                           class="btn btn-warning btn-sm" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Botão Excluir (mantém separado) -->
+                        <form asp-action="Excluir" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@aluno.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Tem certeza?')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

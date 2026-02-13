@@ -1,0 +1,215 @@
+﻿@model escolakell.Models.Aluno
+@{
+    var modo = ViewBag.Modo as string ?? "Criar";
+    var titulo = modo == "Editar" ? "Editar Aluno" : "Adicionar Novo Aluno";
+    var botaoTexto = modo == "Editar" ? "Atualizar" : "Salvar";
+    var botaoIcone = modo == "Editar" ? "fa-edit" : "fa-save";
+
+    ViewData["Title"] = titulo;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header @(modo == "Editar" ? "bg-warning" : "bg-success") text-white">
+                    <h4 class="mb-0">
+                        <i class="fas @botaoIcone"></i> @titulo
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <!-- Mensagens -->
+                    @if (TempData["Erro"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["Erro"]
+                        </div>
+                    }
+
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger">
+                            <h5>Corrija os erros:</h5>
+                            <ul>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Formulário -->
+                    <form asp-action="Salvar">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Campo oculto para ID (só aparece em edição) -->
+                        @if (modo == "Editar")
+                        {
+                            <input type="hidden" asp-for="Id" />
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Editando registro #@Model.Id
+                            </div>
+                        }
+
+                        <!-- Nome -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Nome" class="form-label">
+                                <i class="fas fa-user"></i> Nome do Aluno *
+                            </label>
+                            <input asp-for="Nome" class="form-control"
+                                   placeholder="Digite o nome completo"
+                                   autofocus />
+                            <span asp-validation-for="Nome" class="text-danger"></span>
+                        </div>
+
+                        <!-- Matéria -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Materia" class="form-label">
+                                <i class="fas fa-book"></i> Matéria *
+                            </label>
+                            <select asp-for="Materia" class="form-control">
+                                <option value="">Selecione a matéria</option>
+                                <option value="Matemática">Matemática</option>
+                                <option value="Português">Português</option>
+                                <option value="História">História</option>
+                                <option value="Geografia">Geografia</option>
+                                <option value="Ciências">Ciências</option>
+                                <option value="Inglês">Inglês</option>
+                                <option value="Educação Física">Educação Física</option>
+                                <option value="Artes">Artes</option>
+                            </select>
+                            <span asp-validation-for="Materia" class="text-danger"></span>
+                        </div>
+
+                        <!-- Notas (em linha) -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Nota1" class="form-label">
+                                        <i class="fas fa-edit"></i> Nota 1 *
+                                    </label>
+                                    <input asp-for="Nota1" class="form-control"
+                                           type="number" step="0.1" min="0" max="10"
+                                           placeholder="0.0 a 10.0" />
+                                    <span asp-validation-for="Nota1" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Nota2" class="form-label">
+                                        <i class="fas fa-edit"></i> Nota 2 *
+                                    </label>
+                                    <input asp-for="Nota2" class="form-control"
+                                           type="number" step="0.1" min="0" max="10"
+                                           placeholder="0.0 a 10.0" />
+                                    <span asp-validation-for="Nota2" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações calculadas (só em edição) -->
+                        @if (modo == "Editar")
+                        {
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-calculator"></i> Cálculos Automáticos
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Média:</strong> @Model.Media.ToString("N1")</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p>
+                                                <strong>Situação:</strong>
+                                                <span class="badge @(Model.Media >= 6 ? "bg-success" : "bg-warning")">
+                                                    @Model.SituacaoTexto
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        Estes valores são calculados automaticamente com base nas notas.
+                                    </small>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Botões -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn @(modo == "Editar" ? "btn-warning" : "btn-success")">
+                                <i class="fas @botaoIcone"></i> @botaoTexto
+                            </button>
+
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+
+                            @if (modo == "Editar")
+                            {
+                                <a asp-action="Excluir" asp-route-id="@Model.Id"
+                                   class="btn btn-danger float-end"
+                                   onclick="return confirm('Tem certeza que deseja excluir este aluno?')">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            // Auto-seleciona a matéria no dropdown
+            $('#Materia').val('@Model.Materia');
+
+            // Calcula média em tempo real (opcional)
+            $('#Nota1, #Nota2').on('input', function() {
+                const nota1 = parseFloat($('#Nota1').val()) || 0;
+                const nota2 = parseFloat($('#Nota2').val()) || 0;
+                const media = (nota1 + nota2) / 2;
+
+                // Atualiza preview se existir
+                if ($('#preview-media').length) {
+                    $('#preview-media').text(media.toFixed(1));
+                    $('#preview-situacao').text(media >= 6 ? 'Aprovado' : 'Recuperação');
+                }
+            });
+
+            // Validação customizada
+            $('form').on('submit', function(e) {
+                const nota1 = parseFloat($('#Nota1').val());
+                const nota2 = parseFloat($('#Nota2').val());
+
+                if (nota1 < 0 || nota1 > 10) {
+                    alert('Nota 1 deve estar entre 0 e 10');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (nota2 < 0 || nota2 > 10) {
+                    alert('Nota 2 deve estar entre 0 e 10');
+                    e.preventDefault();
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+}

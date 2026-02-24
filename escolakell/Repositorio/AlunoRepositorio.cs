@@ -1,38 +1,30 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using EscolaApp.Repositorio;
 using escolakell.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 
-namespace EscolaApp.Repositorio
+namespace escolakell.Repositorio
 {
     public class AlunoRepositorio
     {
         private readonly string _connectionString;
+        private readonly ILogger<AlunoRepositorio> _logger;
 
-        public AlunoRepositorio(IConfiguration configuration)
+        public AlunoRepositorio(IConfiguration configuration, ILogger<AlunoRepositorio> logger)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _logger = logger;
         }
 
-        // ================ MÉTODOS DE CONVERSÃO ================
-        private char BoolParaChar(bool valor) => valor ? 'S' : 'N';
-        private bool CharParaBool(char valor) => valor == 'S';
-        private bool CharParaBool(string valor) => valor == "S";
-        // =====================================================
-
-        // Listar todos (já está correto)
         public List<Aluno> ListarTodos()
         {
             var lista = new List<Aluno>();
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string sql = @"SELECT Id, Nome, Materia, Nota1, Nota2, Media, SituacaoAprovada,
-                              
-                              CASE 
-                                  WHEN Media  >= 6 THEN 'Aprovado' 
-                                  ELSE 'Recuperação' 
-                              END as 'SituacaoTexto'
-                              FROM Diarios
-                              ORDER BY Nome, Materia";
+                string sql = @"SELECT Id, Nome, AnoNascimento, Turma
+                              FROM Alunos
+                              ORDER BY Nome";
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 conn.Open();
@@ -41,15 +33,14 @@ namespace EscolaApp.Repositorio
                 {
                     while (reader.Read())
                     {
+                        int ano = (int)reader["AnoNascimento"];
                         lista.Add(new Aluno
                         {
                             Id = (int)reader["Id"],
                             Nome = reader["Nome"].ToString(),
-                            Materia = reader["Materia"].ToString(),
-                            Nota1 = Convert.ToDouble(reader["Nota1"]),
-                            Nota2 = Convert.ToDouble(reader["Nota2"]),
-                            Media = Convert.ToDouble(reader["Media"]),
-                            SituacaoAprovada = CharParaBool(reader["SituacaoAprovada"].ToString())
+                            DataNascimento = new DateTime(ano, 1, 1),
+                            AnoNascimento = ano, 
+                            Turma = reader["Turma"].ToString(),
                         });
                     }
                 }
@@ -57,37 +48,32 @@ namespace EscolaApp.Repositorio
             return lista;
         }
 
-        // Adicionar novo aluno
-        public void Adicionar(Aluno aluno)
+        public int Adicionar(Aluno aluno)
         {
-
-            aluno.Media = (aluno.Nota1 + aluno.Nota2) / 2;
-            aluno.SituacaoAprovada = aluno.Media >= 6;
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string sql = @"INSERT INTO Diarios (Nome, Materia, Nota1, Nota2, Media, SituacaoAprovada) 
-                               VALUES (@Nome, @Materia, @Nota1, @Nota2,@Media, @SituacaoAprovada)";
+                string sql = @"INSERT INTO Alunos (Nome, AnoNascimento, Turma) 
+                               VALUES (@Nome, @AnoNascimento, @Turma);
+                               SELECT SCOPE_IDENTITY();"; 
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@Nome", aluno.Nome ?? "");
-                cmd.Parameters.AddWithValue("@Materia", aluno.Materia ?? "");
-                cmd.Parameters.AddWithValue("@Nota1", aluno.Nota1);
-                cmd.Parameters.AddWithValue("@Nota2", aluno.Nota2);
-                cmd.Parameters.AddWithValue("@Media", aluno.Media);
-                cmd.Parameters.AddWithValue("@SituacaoAprovada", BoolParaChar(aluno.SituacaoAprovada));
+                cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
+                cmd.Parameters.AddWithValue("@AnoNascimento", aluno.DataNascimento.Year);
+                cmd.Parameters.AddWithValue("@Turma", aluno.Turma);
 
                 conn.Open();
-                cmd.ExecuteNonQuery();
+               
+                int novoId = Convert.ToInt32(cmd.ExecuteScalar());
+                return novoId; 
             }
         }
 
-        // Obter aluno por ID
         public Aluno ObterPorId(int id)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string sql = @"SELECT Id, Nome, Materia, Nota1, Nota2, Media, SituacaoAprovada 
-                               FROM Diarios 
+                string sql = @"SELECT Id, Nome, AnoNascimento, Turma
+                               FROM Alunos 
                                WHERE Id = @Id";
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
@@ -98,15 +84,14 @@ namespace EscolaApp.Repositorio
                 {
                     if (reader.Read())
                     {
+                        int ano = (int)reader["AnoNascimento"];
                         return new Aluno
                         {
                             Id = (int)reader["Id"],
                             Nome = reader["Nome"].ToString(),
-                            Materia = reader["Materia"].ToString(),
-                            Nota1 = Convert.ToDouble(reader["Nota1"]),
-                            Nota2 = Convert.ToDouble(reader["Nota2"]),
-                            Media = Convert.ToDouble(reader["Media"]),
-                            SituacaoAprovada = CharParaBool(reader["SituacaoAprovada"].ToString())
+                            DataNascimento = new DateTime(ano, 1, 1),
+                            AnoNascimento = ano,
+                            Turma = reader["Turma"].ToString(),
                         };
                     }
                 }
@@ -114,42 +99,32 @@ namespace EscolaApp.Repositorio
             return null;
         }
 
-        // Atualizar aluno
         public void Atualizar(Aluno aluno)
         {
-            aluno.Media = (aluno.Nota1 + aluno.Nota2) / 2;
-            aluno.SituacaoAprovada = aluno.Media >= 6;
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string sql = @"UPDATE Diarios 
-                               SET Nome = @Nome, 
-                                   Materia = @Materia, 
-                                   Nota1 = @Nota1, 
-                                   Nota2 = @Nota2,
-                                   Media = @Media,
-                                   SituacaoAprovada = @SituacaoAprovada
+                string sql = @"UPDATE Alunos 
+                               SET Nome = @Nome,
+                                   AnoNascimento = @AnoNascimento,
+                                   Turma = @Turma
                                WHERE Id = @Id";
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 cmd.Parameters.AddWithValue("@Id", aluno.Id);
                 cmd.Parameters.AddWithValue("@Nome", aluno.Nome);
-                cmd.Parameters.AddWithValue("@Materia", aluno.Materia);
-                cmd.Parameters.AddWithValue("@Nota1", aluno.Nota1);
-                cmd.Parameters.AddWithValue("@Nota2", aluno.Nota2);
-                cmd.Parameters.AddWithValue("@Media", aluno.Media);
-                cmd.Parameters.AddWithValue("@SituacaoAprovada", BoolParaChar(aluno.SituacaoAprovada));
+                cmd.Parameters.AddWithValue("@AnoNascimento", aluno.DataNascimento.Year);
+                cmd.Parameters.AddWithValue("@Turma", aluno.Turma);
 
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
         }
 
-        // Excluir aluno
         public void Excluir(int id)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string sql = "DELETE FROM Diarios WHERE Id = @Id";
+                string sql = "DELETE FROM Alunos WHERE Id = @Id";
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 cmd.Parameters.AddWithValue("@Id", id);
 

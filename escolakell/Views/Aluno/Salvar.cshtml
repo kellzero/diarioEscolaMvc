@@ -1,0 +1,357 @@
+﻿@model escolakell.Models.ViewModel.AlunoDiarioViewModel
+@{
+    var modo = ViewBag.Modo as string ?? "Criar";
+    var titulo = modo == "Editar" ? "Editar Aluno e Notas" : "Adicionar Novo Aluno com Notas";
+    var botaoTexto = modo == "Editar" ? "Atualizar" : "Salvar";
+    var botaoIcone = modo == "Editar" ? "fa-edit" : "fa-save";
+
+    ViewData["Title"] = titulo;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header @(modo == "Editar" ? "bg-warning" : "bg-success") text-white">
+                    <h4 class="mb-0">
+                        <i class="fas @botaoIcone"></i> @titulo
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["Erro"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["Erro"]
+                        </div>
+                    }
+
+                    @if (ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger">
+                            <h5>Corrija os erros:</h5>
+                            <ul>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    
+                    <form asp-action="Salvar">
+                        @Html.AntiForgeryToken()
+
+                        
+                        @if (modo == "Editar")
+                        {
+                            <input type="hidden" asp-for="Aluno.Id" />
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Editando registro #@Model.Aluno.Id
+                            </div>
+                        }
+
+                        
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-graduate"></i> Dados do Aluno
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Aluno.Nome" class="form-label fw-bold">
+                                                <i class="fas fa-user"></i> Nome do Aluno *
+                                            </label>
+                                            <input asp-for="Aluno.Nome" class="form-control form-control-lg"
+                                                   placeholder="Digite o nome completo"
+                                                   autofocus />
+                                            <span asp-validation-for="Aluno.Nome" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Aluno.Turma" class="form-label fw-bold">
+                                                <i class="fas fa-users"></i> Turma *
+                                            </label>
+                                            <select asp-for="Aluno.Turma" class="form-control">
+                                                <option value="">Selecione a turma</option>
+                                                <option value="3-A">3º Ano A</option>
+                                                <option value="3-B">3º Ano B</option>
+                                                <option value="3-C">3º Ano C</option>
+                                                <option value="2-A">2º Ano A</option>
+                                                <option value="2-B">2º Ano B</option>
+                                                <option value="1-A">1º Ano A</option>
+                                                <option value="1-B">1º Ano B</option>
+                                            </select>
+                                            <span asp-validation-for="Aluno.Turma" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                   
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Aluno.DataNascimento" class="form-label fw-bold">
+                                                <i class="fas fa-calendar-alt"></i> Data de Nascimento *
+                                            </label>
+                                            <input asp-for="Aluno.DataNascimento" class="form-control"
+                                                   type="date"
+                                                   max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                            <span asp-validation-for="Aluno.DataNascimento" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <input type="hidden" asp-for="Aluno.AnoNascimento" />
+
+                                    
+                                    <div class="col-md-12">
+                                        <div class="alert alert-light border" id="preview-idade-container" style="display: none;">
+                                            <i class="fas fa-birthday-cake"></i>
+                                            Idade calculada: <strong id="preview-idade"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-book-open"></i> Notas do Aluno
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    
+                                    <div class="col-md-12">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Diario.Materia" class="form-label fw-bold">
+                                                <i class="fas fa-book"></i> Matéria *
+                                            </label>
+                                            <select asp-for="Diario.Materia" class="form-control">
+                                                <option value="">Selecione a matéria</option>
+                                                <option value="Matemática">Matemática</option>
+                                                <option value="Português">Português</option>
+                                                <option value="História">História</option>
+                                                <option value="Geografia">Geografia</option>
+                                                <option value="Ciências">Ciências</option>
+                                                <option value="Inglês">Inglês</option>
+                                                <option value="Educação Física">Educação Física</option>
+                                                <option value="Artes">Artes</option>
+                                            </select>
+                                            <span asp-validation-for="Diario.Materia" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Diario.Nota1" class="form-label fw-bold">
+                                                <i class="fas fa-edit"></i> Nota 1 *
+                                            </label>
+                                            <input asp-for="Diario.Nota1" class="form-control"
+                                                   type="number" step="0.1" min="0" max="10"
+                                                   placeholder="0.0 a 10.0" />
+                                            <span asp-validation-for="Diario.Nota1" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Diario.Nota2" class="form-label fw-bold">
+                                                <i class="fas fa-edit"></i> Nota 2 *
+                                            </label>
+                                            <input asp-for="Diario.Nota2" class="form-control"
+                                                   type="number" step="0.1" min="0" max="10"
+                                                   placeholder="0.0 a 10.0" />
+                                            <span asp-validation-for="Diario.Nota2" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" asp-for="Diario.AlunoId" />
+
+                                    <div class="col-md-12">
+                                        <div class="alert alert-light border" id="preview-media-container" style="display: none;">
+                                            <i class="fas fa-calculator"></i>
+                                            Média: <strong id="preview-media"></strong> -
+                                            Situação: <strong id="preview-situacao"></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (modo == "Editar")
+                        {
+                            var mediaCalculada = (Model.Diario.Nota1 + Model.Diario.Nota2) / 2;
+                            var situacaoTexto = mediaCalculada >= 6 ? "Aprovado" : "Recuperação";
+                            var corBadge = mediaCalculada >= 6 ? "bg-success" : "bg-warning";
+
+                            <div class="card mb-4 bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <p class="mb-0">
+                                                <strong>
+                                                    <i class="fas fa-calendar"></i> Idade:
+                                                </strong>
+                                                @Model.Aluno.Idade anos
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p class="mb-0">
+                                                <strong>
+                                                    <i class="fas fa-birthday-cake"></i> Ano Nasc:
+                                                </strong>
+                                                @Model.Aluno.AnoNascimento
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p class="mb-0">
+                                                <strong>
+                                                    <i class="fas fa-calculator"></i> Média:
+                                                </strong>
+                                                @mediaCalculada.ToString("N1")
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p class="mb-0">
+                                                <strong>
+                                                    <i class="fas fa-check-circle"></i> Situação:
+                                                </strong>
+                                                <span class="badge @corBadge">
+                                                    @situacaoTexto
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="form-group mt-4 d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn @(modo == "Editar" ? "btn-warning" : "btn-success") btn-lg">
+                                    <i class="fas @botaoIcone"></i> @botaoTexto
+                                </button>
+
+                                <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                            </div>
+
+                            @if (modo == "Editar")
+                            {
+                                <a asp-action="Excluir" asp-route-id="@Model.Aluno.Id"
+                                   class="btn btn-danger btn-lg"
+                                   onclick="return confirm('Tem certeza que deseja excluir este aluno?')">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            $('#Aluno_DataNascimento').on('change', function() {
+                const dataNascimento = new Date($(this).val());
+                if (!isNaN(dataNascimento.getTime())) {
+                    const hoje = new Date();
+                    let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+
+                    const mes = hoje.getMonth() - dataNascimento.getMonth();
+                    if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+                        idade--;
+                    }
+
+                    $('#preview-idade').text(idade + ' anos');
+                    $('#preview-idade-container').show();
+                } else {
+                    $('#preview-idade-container').hide();
+                }
+            });
+
+            function calcularPreviewMedia() {
+                const nota1 = parseFloat($('#Diario_Nota1').val()) || 0;
+                const nota2 = parseFloat($('#Diario_Nota2').val()) || 0;
+                const media = (nota1 + nota2) / 2;
+                const situacao = media >= 6 ? 'Aprovado' : 'Recuperação';
+                const cor = media >= 6 ? 'text-success' : 'text-warning';
+
+                if (nota1 > 0 || nota2 > 0) {
+                    $('#preview-media').text(media.toFixed(1));
+                    $('#preview-situacao').text(situacao).removeClass('text-success text-warning').addClass(cor);
+                    $('#preview-media-container').show();
+                } else {
+                    $('#preview-media-container').hide();
+                }
+            }
+
+            $('#Diario_Nota1, #Diario_Nota2').on('input', calcularPreviewMedia);
+
+            $('form').on('submit', function(e) {
+                const dataNascimento = new Date($('#Aluno_DataNascimento').val());
+                const hoje = new Date();
+
+                if (isNaN(dataNascimento.getTime())) {
+                    alert('Por favor, insira uma data de nascimento válida');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (dataNascimento > hoje) {
+                    alert('A data de nascimento não pode ser no futuro');
+                    e.preventDefault();
+                    return false;
+                }
+
+                const nota1 = parseFloat($('#Diario_Nota1').val());
+                const nota2 = parseFloat($('#Diario_Nota2').val());
+
+                if (isNaN(nota1) || nota1 < 0 || nota1 > 10) {
+                    alert('Nota 1 deve ser um número entre 0 e 10');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (isNaN(nota2) || nota2 < 0 || nota2 > 10) {
+                    alert('Nota 2 deve ser um número entre 0 e 10');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (!$('#Diario_Materia').val()) {
+                    alert('Por favor, selecione uma matéria');
+                    e.preventDefault();
+                    return false;
+                }
+
+                return true;
+            });
+
+            if ($('#Aluno_DataNascimento').val()) {
+                $('#Aluno_DataNascimento').trigger('change');
+            }
+            calcularPreviewMedia();
+        });
+    </script>
+}

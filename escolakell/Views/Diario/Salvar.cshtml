@@ -1,4 +1,4 @@
-﻿@model escolakell.Models.Aluno
+﻿@model escolakell.Models.Diario
 @{
     var modo = ViewBag.Modo as string ?? "Criar";
     var titulo = modo == "Editar" ? "Editar Aluno" : "Adicionar Novo Aluno";
@@ -56,13 +56,13 @@
 
                         <!-- Nome -->
                         <div class="form-group mb-3">
-                            <label asp-for="Nome" class="form-label">
+                            <label asp-for="Aluno.Nome" class="form-label">
                                 <i class="fas fa-user"></i> Nome do Aluno *
                             </label>
-                            <input asp-for="Nome" class="form-control"
+                            <input asp-for="Aluno.Nome" class="form-control"
                                    placeholder="Digite o nome completo"
                                    autofocus />
-                            <span asp-validation-for="Nome" class="text-danger"></span>
+                            <span asp-validation-for="Aluno.Nome" class="text-danger"></span>
                         </div>
 
                         <!-- Matéria -->

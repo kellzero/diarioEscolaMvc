@@ -1,10 +1,13 @@
 using EscolaApp.Repositorio;
+using escolakell.Repositorio;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<DiarioRepositorio>();
 builder.Services.AddScoped<AlunoRepositorio>();
+
 
 var app = builder.Build();
 
@@ -26,5 +29,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Diario}/{action=Index}/{id?}");
+    
 
 app.Run();

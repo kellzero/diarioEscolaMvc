@@ -1,23 +1,30 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace escolakell.Models;
-public class Aluno
+﻿namespace escolakell.Models
 {
-    public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Materia { get; set; }
-    public double Nota1 { get; set; }
-    public double Nota2 { get; set; }
-
-
-    public bool SituacaoAprovada { get; set; }
-
-    [Display(Name = "Média")]
-    public double Media { get; set; }
-    [Display(Name = "Situação")]
-    public string SituacaoTexto
+    public class Aluno
     {
-        get { return Media >= 6 ? "Aprovado" : "Recuperação"; }
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public string Turma {  get; set; }
+        public DateTime DataNascimento { get; set; }
+        public int AnoNascimento { get; set; }
+        public int Idade
+        {
+            get
+            {
+
+                if (DataNascimento == default)
+                    return 0;
+
+                var hoje = DateTime.Today;
+                var idade = hoje.Year - DataNascimento.Year;
+
+
+                if (DataNascimento.Date > hoje.AddYears(-idade))
+                    idade--;
+
+                return idade;
+            }
+        }
+        public List<Diario> Diarios { get; set; } = new List<Diario>();
     }
 }

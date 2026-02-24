@@ -7,72 +7,26 @@ namespace EscolaApp.Controllers
 {
     public class DiarioController : Controller
     {
-        private readonly AlunoRepositorio _repository;
+        private readonly DiarioRepositorio _repository;
+        private readonly ILogger<DiarioController> _logger;
 
-        public DiarioController(AlunoRepositorio repository)
+        public DiarioController(IConfiguration configuration, ILogger<DiarioController> logger)
         {
-            _repository = repository;
+            // PASSA o logger para o repositório
+            _logger = logger;
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var repoLogger = loggerFactory.CreateLogger<DiarioRepositorio>();
+            _repository = new DiarioRepositorio(configuration, repoLogger); // USA O CONSTRUTOR COM LOGGER!
         }
 
-        // GET: Diario/Index
+       
         [HttpGet]
         public IActionResult Index()
         {
-            var alunos = _repository.ListarTodos();
+            var alunos = _repository.ListarTodosComAluno();
             return View(alunos);
         }
-
-        // GET: Diario/Salvar (para Criar ou Editar)
-        [HttpGet]
-        public IActionResult Salvar(int? id)
-        {
-            if (id.HasValue && id > 0)
-            {
-                // MODO EDIÇÃO: Busca aluno existente
-                var aluno = _repository.ObterPorId(id.Value);
-                if (aluno == null)
-                {
-                    return NotFound();
-                }
-                ViewBag.Modo = "Editar";
-                return View(aluno);
-            }
-            else
-            {
-                // MODO CRIAÇÃO: Novo aluno
-                ViewBag.Modo = "Criar";
-                return View(new Aluno());
-            }
-        }
-
-        // POST: Diario/Salvar (para Criar ou Editar)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Salvar(Aluno aluno)
-        {
-            if (ModelState.IsValid)
-            {
-                if (aluno.Id > 0)
-                {
-                    // MODO EDIÇÃO: Atualiza
-                    _repository.Atualizar(aluno);
-                    TempData["Mensagem"] = "Aluno atualizado com sucesso!";
-                }
-                else
-                {
-                    // MODO CRIAÇÃO: Adiciona novo
-                    _repository.Adicionar(aluno);
-                    TempData["Mensagem"] = "Aluno cadastrado com sucesso!";
-                }
-                return RedirectToAction("Index");
-            }
-
-            // Se houver erro, retorna para a view
-            ViewBag.Modo = aluno.Id > 0 ? "Editar" : "Criar";
-            return View(aluno);
-        }
-
-        // GET: Diario/Excluir/{id} (confirmação)
+     
         [HttpGet]
         public IActionResult Excluir(int id)
         {
@@ -84,7 +38,7 @@ namespace EscolaApp.Controllers
             return View(aluno);
         }
 
-        // POST: Diario/Excluir/{id} (ação real)
+       
         [HttpPost, ActionName("Excluir")]
         [ValidateAntiForgeryToken]
         public IActionResult ExcluirConfirmado(int id)

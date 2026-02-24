@@ -1,0 +1,68 @@
+﻿@model List<escolakell.Models.Aluno>
+@{
+    ViewData["Title"] = "Escola Kell";
+
+    var totalAlunos = Model.Count;
+
+
+    
+}
+
+
+<div class="container mt-4">
+    <h2>Alunos Da Escola Kell</h2>
+
+    <div class="d-flex gap-2 mb-3 align-items-center">
+        <button onclick="mostrarTodos()" class="btn btn-primary">
+            Ver Todos (@totalAlunos)
+        </button>
+        <a asp-controller="Diario" asp-action="Index"
+           class="btn btn-info ms-auto">
+            <i class="fas fa-book-open"></i> Ver Diário de Notas
+        </a>
+
+        <a asp-action="Salvar" class="btn btn-success ms-auto">
+            <i class="fas fa-plus"></i> Adicionar Aluno
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Idade</th>
+                <th>Turma</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in Model)
+            {
+                
+
+                <tr 
+                    >
+                    <td>@(aluno.Nome ?? $"ID: {aluno.Nome}")</td>
+                    <td>@aluno.Idade anos</td>
+                    <td>@aluno.Turma</td>
+                   
+                    <td>
+                        <!-- Botão Editar agora vai para Salvar com ID -->
+                        <a asp-action="Salvar" asp-route-id="@aluno.Id"
+                           class="btn btn-warning btn-sm" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Botão Excluir (mantém separado) -->
+                        <form asp-action="Excluir" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@aluno.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Tem certeza?')" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

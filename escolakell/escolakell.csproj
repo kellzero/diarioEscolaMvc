@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <Content Remove="Views\Diario\Criar.cshtml" />
+    <Content Remove="Views\Diario\IndexComAluno.cshtml" />
+    <Content Remove="Views\Diario\Salvar.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
